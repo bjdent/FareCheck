@@ -20,13 +20,13 @@ of = of.drop(['yn','o','d','rt','fp'], axis=1)
 nf = nf.drop(['yn'], axis=1)
 nf = pd.merge(nf, of, on='mkt')
 
-yofc = pd.DataFrame()
-def makeDF(x, fareplan):
-	if(x['fp']==fareplan):
-		yofc.append(x)
+#yofc = pd.DataFrame()
+#def makeDF(x):
+#	if(x['fp']=="YOFC"):
+#		yofc.append(x)
 		
-yofc = yofc.apply(makeDF(yofc), axis=1)
-print yofc.info()
+#yofc = nf.apply(makeDF, axis=1)
+#print yofc.info()
 
 increase = float(raw_input('Enter percentage increase: '))
 nf['CALCur'] = nf['OLDur'].apply(lambda x: x*(1+increase))
