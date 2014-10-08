@@ -20,16 +20,12 @@ of = of.drop(['yn','o','d','rt','fp'], axis=1)
 nf = nf.drop(['yn'], axis=1)
 nf = pd.merge(nf, of, on='mkt')
 
-#yofc = pd.DataFrame()
-#def makeDF(x):
-#	if(x['fp']=="YOFC"):
-#		yofc.append(x)
-		
-#yofc = nf.apply(makeDF, axis=1)
-#print yofc.info()
-
+#Calculate YOFC base increase
+yofc = pd.DataFrame()
+yofc = nf[(nf.fp == 'YOFC')]
 increase = float(raw_input('Enter percentage increase: '))
-nf['CALCur'] = nf['OLDur'].apply(lambda x: x*(1+increase))
-nf['CALCr'] = nf['CALCur'].apply(lambda x: round(x,0))
-#print of.info()
+yofc['CALCur'] = yofc['OLDur'].apply(lambda x: x*(1+increase))
+yofc['CALCr'] = yofc['CALCur'].apply(lambda x: round(x,0))
+
+
 nf.to_csv('output.csv')
