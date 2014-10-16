@@ -10,11 +10,11 @@ nf.columns = ['rt','o','d','fp','ur','r','eff','dis','yn']
 
 #Calculation expressions
 #Second level calculations (off YOFC)
-aof1c = .77
-bof1c = .59
-dof1c = .45
+aof1c = .89
+bof1c = .74
+dof1c = .52
 #Third level calculations (off YOFC)
-jc = .5
+jc = .26
 #Fourth level calculations (off second level calcs)
 #YOF9 = YOFC+5
 #Fifth level calculations
@@ -23,14 +23,14 @@ uemnc = 18
 #Ninth level calculations
 eo8nc = .75
 #Sleeper calculations
-vac = .85
-vbc = .70
-vcc = .55
-vdc = .40
-dac = .87
-dbc = .74
-dcc = .61
-ddc = .48
+vac = .86
+vbc = .71
+vcc = .57
+vdc = .42
+dac = .86
+dbc = .71
+dcc = .57
+ddc = .42
 
 def marketfp(x):
 	if(x['o']<x['d']):
@@ -45,7 +45,7 @@ def market(x):
 		return x['d']+x['o']
 
 def bizclass(x):
-	if((x['DOF1r']*jc)<15):
+	if((x['YOFCr']*jc)<15):
 		return 15
 	else:
 		return (x['DOF1r']*jc)
@@ -61,6 +61,12 @@ def initcheck(x):
 		return "Correct"
 	else:
 		return "Error"
+		
+def obofcalc(x):
+	if((x['YOFCr']*1.5) > (x['YOFCr']+10)):
+		return (x['YOFCr']+10)
+	else:
+		return (x['YOFCr']*1.5)
 
 of['mktfp'] = of.apply(marketfp, axis=1)
 nf['mktfp'] = nf.apply(marketfp, axis=1)
@@ -239,23 +245,25 @@ dof1calc = pd.DataFrame()
 dof1calc = dof1
 dof1calc = dof1calc.drop(['eff','dis','OLDur','OLDr','OLDeff','OLDdis','rt','o','d','fp','ur','r','mktfp','check'], axis=1)
 dof1calc.columns = ['mkt','DOF1ur','DOF1r','intcheck']
-'''
+
 #Calculate J (off of Y)
 j = pd.DataFrame()
 j = nf[(nf.fp == 'J')]
 j = pd.merge(j,yofccalc, on='mkt')
 j['CALCur'] = j['YOFCr'].apply(lambda x: x*(jc))
 j['CALCr'] = j['CALCur'].apply(lambda x: round(x,0))
-j = j.drop(['YOFCur', 'YOFCr'], axis=1)
+j['derivedcheck'] = j.apply(initcheck, axis=1)
+j = j.drop(['YOFCur', 'YOFCr','intcheck'], axis=1)
 j['check'] = j.apply(errorcheck, axis=1)
-
+'''
 #Calculate YOF9
 yof9 = pd.DataFrame()
 yof9 = nf[(nf.fp == 'YOF9')]
 yof9 = pd.merge(yof9,yofccalc, on='mkt')
 yof9['CALCur'] = yof9['YOFCr'].apply(lambda x: x + 5)
 yof9['CALCr'] = yof9['CALCur'].apply(lambda x: round(x,0))
-yof9 = yof9.drop(['YOFCur', 'YOFCr'], axis=1)
+yof9['derivedcheck'] = yof9.apply(initcheck, axis=1)
+yof9 = yof9.drop(['YOFCur', 'YOFCr', 'intcheck'], axis=1)
 yof9['check'] = yof9.apply(errorcheck, axis=1)
 
 #Calculate AOF9
@@ -264,7 +272,8 @@ aof9 = nf[(nf.fp == 'AOF9')]
 aof9 = pd.merge(aof9,aof1calc, on='mkt')
 aof9['CALCur'] = aof9['AOF1r'].apply(lambda x: x + 5)
 aof9['CALCr'] = aof9['CALCur'].apply(lambda x: round(x,0))
-aof9 = aof9.drop(['AOF1ur', 'AOF1r'], axis=1)
+aof9['derivedcheck'] = aof9.apply(initcheck, axis=1)
+aof9 = aof9.drop(['AOF1ur', 'AOF1r','intcheck'], axis=1)
 aof9['check'] = aof9.apply(errorcheck, axis=1)
 
 #Calculate BOF9
@@ -273,7 +282,8 @@ bof9 = nf[(nf.fp == 'BOF9')]
 bof9 = pd.merge(bof9,bof1calc, on='mkt')
 bof9['CALCur'] = bof9['BOF1r'].apply(lambda x: x + 5)
 bof9['CALCr'] = bof9['CALCur'].apply(lambda x: round(x,0))
-bof9 = bof9.drop(['BOF1ur', 'BOF1r'], axis=1)
+bof9['derivedcheck'] = bof9.apply(initcheck, axis=1)
+bof9 = bof9.drop(['BOF1ur', 'BOF1r','intcheck'], axis=1)
 bof9['check'] = bof9.apply(errorcheck, axis=1)
 
 #Calculate DOF9
@@ -282,9 +292,10 @@ dof9 = nf[(nf.fp == 'DOF9')]
 dof9 = pd.merge(dof9,dof1calc, on='mkt')
 dof9['CALCur'] = dof9['DOF1r'].apply(lambda x: x + 5)
 dof9['CALCr'] = dof9['CALCur'].apply(lambda x: round(x,0))
-dof9 = dof9.drop(['DOF1ur', 'DOF1r'], axis=1)
+dof9['derivedcheck'] = dof9.apply(initcheck, axis=1)
+dof9 = dof9.drop(['DOF1ur', 'DOF1r','intcheck'], axis=1)
 dof9['check'] = dof9.apply(errorcheck, axis=1)
-'''
+
 
 #Calculate J
 j = pd.DataFrame()
@@ -295,7 +306,7 @@ j['CALCr'] = j['CALCur'].apply(lambda x: round(x,0))
 j['derivedcheck'] = j.apply(initcheck, axis=1)
 j = j.drop(['DOF1ur', 'DOF1r','intcheck'], axis=1)
 j['check'] = j.apply(errorcheck, axis=1)
-'''
+
 #Calculate UE45
 ue45 = pd.DataFrame()
 ue45 = nf[(nf.fp == 'UE45')]
@@ -328,7 +339,7 @@ eo8n['check'] = eo8n.apply(errorcheck, axis=1)
 obof = pd.DataFrame()
 obof = nf[(nf.fp == 'OBOF')]
 obof = pd.merge(obof,yofccalc, on='mkt')
-obof['CALCur'] = obof['YOFCr'].apply(lambda x: x * 1.5)
+obof['CALCur'] = obof.apply(obofcalc, axis=1)
 obof['CALCr'] = obof['CALCur'].apply(lambda x: round(x,0))
 obof['derivedcheck'] = obof.apply(initcheck, axis=1)
 obof = obof.drop(['YOFCur', 'YOFCr','intcheck'], axis=1)
@@ -343,7 +354,7 @@ obbf['CALCr'] = obbf['CALCur'].apply(lambda x: round(x,0))
 obbf['derivedcheck'] = obbf.apply(initcheck, axis=1)
 obbf = obbf.drop(['YOFCur', 'YOFCr','intcheck'], axis=1)
 obbf['check'] = obbf.apply(errorcheck, axis=1)
-
+'''
 #Calculate OBBS
 obbs = pd.DataFrame()
 obbs = nf[(nf.fp == 'OBBS')]
@@ -354,13 +365,42 @@ obbs['derivedcheck'] = obbs['check']
 obbs = obbs.drop(['fp_y', 'ur_y','r_y','eff_y','dis_y','mktfp_y','OLDur_y','OLDr_y','OLDeff_y','OLDdis_y','check'], axis=1)
 obbs.columns = ['rt','o','d','fp','ur','r','eff','dis','mktfp','OLDur','OLDr','OLDeff','OLDdis','mkt','CALCur','CALCr','derivedcheck']
 obbs['check'] = obbs.apply(errorcheck, axis=1)
-
+'''
 #Combine all fareplans into one DataFrame and export to .csv
 output = pd.DataFrame()
-output = pd.concat([yofc, aof1, bof1, dof1, j, obof, obbf, obbs, vs, va, vb, vc, vd, ds, da, db, dc, dd], ignore_index=True)
-#yof9, aof9, bof9, dof9, ue45, uemn, eo8n
+output = pd.concat([yofc, aof1, bof1, dof1, obof, obbf, vs, va, vb, vc, vd, ds, da, db, dc, dd], ignore_index=True)
+#ue45, uemn, eo8n, j, vs, va, vb, vc, vd, ds, da, db, dc, dd,yof9, aof9, bof9, dof9
 output = output.drop(['eff','dis','OLDeff','OLDdis'], axis=1)
 output = output[['rt','mktfp','mkt','o','d','fp','ur','r','OLDur','OLDr','CALCur','CALCr','check','derivedcheck']]
 
 output.to_csv('output.csv')
+writer = pd.ExcelWriter('output.xlsx')
+yofc.to_excel(writer,'yofc')
+aof1.to_excel(writer,'aof1')
+bof1.to_excel(writer,'bof1')
+dof1.to_excel(writer,'dof1')
+obof.to_excel(writer,'obof')
+obbf.to_excel(writer,'obbf')
+'''
+yof9.to_excel(writer,'yof9')
+aof9.to_excel(writer,'aof9')
+bof9.to_excel(writer,'bof9')
+dof9.to_excel(writer,'dof9')
+'''
+vs.to_excel(writer,'vs')
+va.to_excel(writer,'va')
+vb.to_excel(writer,'vb')
+vc.to_excel(writer,'vc')
+vd.to_excel(writer,'vd')
+ds.to_excel(writer,'ds')
+da.to_excel(writer,'da')
+db.to_excel(writer,'db')
+dc.to_excel(writer,'dc')
+dd.to_excel(writer,'dd')
+#output.to_excel(writer,'all')
+#nf.to_excel(writer,'newfares')
+#of.to_excel(writer,'oldfares')
+writer.save()
+#, aof1, bof1, dof1, obof, obbf, yof9, aof9, bof9, dof9, vs, va, vb, vc, vd, ds, da, db, dc, dd
+
 print output[output['check'] == "Error"].count
